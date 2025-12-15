@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AÖL Çalışma Panosu</title>
+<style>
+:root{
+  --bg:#0b1020; --card:#11162a; --txt:#e6e9ff; --muted:#9aa3ff;
+  --ok:#32d583; --bad:#ff6b6b; --pri:#6c7cff;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto}
+body{margin:0;background:linear-gradient(180deg,#0b1020,#0e1430);color:var(--txt)}
+.wrap{max-width:900px;margin:auto;padding:16px}
+.hdr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.hdr h1{margin:0;font-size:22px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:#141a3a;border:1px solid #20286a;border-radius:999px;padding:6px 10px;font-size:12px}
+.ok{color:var(--ok);border-color:#2a7b58}
+.bad{color:var(--bad);border-color:#7a2a2a}
+.card{background:var(--card);border:1px solid #1c2350;border-radius:14px;padding:14px;margin-top:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+button{background:#1a2160;color:#fff;border:1px solid #2b36a3;border-radius:10px;padding:8px 12px}
+button:hover{background:#222b7a}
+.name{font-weight:600}
+.mini{color:var(--muted);font-size:12px}
+#quiz label{cursor:pointer}
+hr{border:none;border-top:1px solid #1c2350;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>AÖL Çalışma Panosu</h1>
+    <div class="pills">
+      <span class="pill" id="today">Bugün: —</span>
+      <span class="pill ok" id="trTime">Türkiye Saati: --:--</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="name">Ders Testleri</div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="switchQuiz('biyoloji')">Biyoloji</button>
+      <button onclick="switchQuiz('fizik')">Fizik</button>
+      <button onclick="switchQuiz('kimya')">Kimya</button>
+      <button onclick="switchQuiz('edebiyat')">Edebiyat</button>
+      <button onclick="switchQuiz('tarih')">Tarih</button>
+      <button onclick="switchQuiz('dil')">Yabancı Dil</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="quiz"></div>
+    <hr/>
+    <div class="row">
+      <button id="checkQuiz">Kontrol Et</button>
+      <button id="resetQuiz">Sıfırla</button>
+      <span class="pill" id="quizResult"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Tarih & Türkiye Saati =====
+const todayEl=document.getElementById('today');
+const trTimeEl=document.getElementById('trTime');
+function tick(){
+  const now=new Date();
+  todayEl.textContent="Bugün: "+now.toLocaleDateString('tr-TR');
+  const tr=new Date(now.toLocaleString('en-US',{timeZone:'Europe/Istanbul'}));
+  trTimeEl.textContent="Türkiye Saati: "+String(tr.getHours()).padStart(2,'0')+":"+String(tr.getMinutes()).padStart(2,'0');
+}
+tick(); setInterval(tick,1000);
+
+// ===== Soru Bankası (her ders 10 soru) =====
+const questionBank={
+biyoloji:[
+{q:"Karbon ayak izi neyi ifade eder?",options:["Kullanılan tatlı su","Atmosfere salınan CO₂","Canlı çeşitliliği","Ekosistem sayısı"],answer:1,exp:"Karbon ayak izi CO₂ salımıdır."},
+{q:"Su ayak izi neyle ilgilidir?",options:["Tatlı su kullanımı","Nüfus","Toprak","Sıcaklık"],answer:0,exp:"Su ayak izi tatlı su tüketimidir."},
+{q:"Ekolojik ayak izi neyi gösterir?",options:["Doğaya toplam yük","Sadece CO₂","Sadece su","Canlı sayısı"],answer:0,exp:"Toplam çevresel baskıyı gösterir."},
+{q:"Üreticiler kimlerdir?",options:["Hayvanlar","Mantarlar","Bitkiler","Ayrıştırıcılar"],answer:2,exp:"Üreticiler bitkilerdir."},
+{q:"Ayrıştırıcılar hangisi?",options:["Bitki","Otçul","Bakteri-mantar","Etçil"],answer:2,exp:"Ayrıştırıcılar bakteri ve mantarlardır."},
+{q:"Enerji akışı yönü?",options:["Tüketici→Üretici","Üretici→Tüketici","Her yöne","Ayrıştırıcı→Üretici"],answer:1,exp:"Enerji üreticiden tüketiciye akar."},
+{q:"Biyotik faktör?",options:["Işık","Su","Toprak","Bakteri"],answer:3,exp:"Biyotik = canlı."},
+{q:"Abiyotik faktör?",options:["Bitki","Mantar","Işık","Bakteri"],answer:2,exp:"Abiyotik = cansız."},
+{q:"Popülasyon tanımı?",options:["Aynı tür-bölge","Tüm canlılar","Bir türün yeri","Cansız ortam"],answer:0,exp:"Aynı tür bireyler-bölge."},
+{q:"Komünite nedir?",options:["Aynı tür","Farklı türler","Üreticiler","Ayrıştırıcılar"],answer:1,exp:"Farklı tür popülasyonlar."}
+],
+fizik:[
+{q:"F=m·a hangi yasa?",options:["Newton 1","Newton 2","Newton 3","Kepler"],answer:1,exp:"Newton 2."},
+{q:"Etki-tepki?",options:["Newton 1","Newton 2","Newton 3","Galileo"],answer:2,exp:"Newton 3."},
+{q:"Hız?",options:["Yol/Zaman","Kuvvet/Zaman","Enerji/Zaman","Kütle/Hacim"],answer:0,exp:"v=yol/zaman"},
+{q:"İvme?",options:["Hız değişimi","Yol","Kuvvet","Kütle"],answer:0,exp:"İvme hız değişimi."},
+{q:"İş?",options:["Kuvvet×Yol","Kütle×Hız","Hız×Zaman","Basınç×Hacim"],answer:0,exp:"W=F·x"},
+{q:"Enerji?",options:["İş yapabilme","Kuvvet","Hız","Yol"],answer:0,exp:"İş yapabilme."},
+{q:"Sürtünme yönü?",options:["Aynı","Zıt","Dikey","Sıfır"],answer:1,exp:"Harekete zıt."},
+{q:"Net kuvvet 0?",options:["Hızlanır","Yavaşlar","Durur","Sabit hız"],answer:3,exp:"Hız değişmez."},
+{q:"Kütle birimi?",options:["N","J","kg","m/s"],answer:2,exp:"kg"},
+{q:"Kuvvet birimi?",options:["kg","m","N","W"],answer:2,exp:"Newton"}
+],
+kimya:[
+{q:"1 mol?",options:["6,02×10²³","10²³","1","22,4"],answer:0,exp:"Avogadro sayısı."},
+{q:"Mol hesabı?",options:["kütle/mol kütlesi","mol kütlesi/kütle","hacim/kütle","kütle×hacim"],answer:0,exp:"n=m/M"},
+{q:"Asit iyonu?",options:["OH⁻","Na⁺","H⁺","Cl⁻"],answer:2,exp:"H⁺"},
+{q:"Baz iyonu?",options:["H⁺","OH⁻","CO₂","O₂"],answer:1,exp:"OH⁻"},
+{q:"pH<7?",options:["Bazik","Asidik","Nötr","—"],answer:1,exp:"Asidik"},
+{q:"pH=7?",options:["Asidik","Bazik","Nötr","—"],answer:2,exp:"Nötr"},
+{q:"Gaz denklemi?",options:["PV=nRT","F=m·a","E=mc²","M=mol/L"],answer:0,exp:"PV=nRT"},
+{q:"Molarite?",options:["mol/L","kütle/L","mol×L","kütle/mol"],answer:0,exp:"M=mol/L"},
+{q:"Çözücü?",options:["Tuz","Şeker","Su","Kum"],answer:2,exp:"Genelde su"},
+{q:"Kimyasal değişim?",options:["Erime","Buharlaşma","Paslanma","Çözünme"],answer:2,exp:"Paslanma"}
+],
+edebiyat:[
+{q:"Çalıkuşu yazarı?",options:["Yakup Kadri","Reşat Nuri","Halide Edip","Peyami Safa"],answer:1,exp:"Reşat Nuri"},
+{q:"Yaban yazarı?",options:["Yakup Kadri","Orhan Veli","Tanpınar","Sait Faik"],answer:0,exp:"Yakup Kadri"},
+{q:"Sinekli Bakkal?",options:["Peyami Safa","Halide Edip","Reşat Nuri","Nazım"],answer:1,exp:"Halide Edip"},
+{q:"9. Hariciye?",options:["Peyami Safa","Yakup Kadri","Cahit Sıtkı","Orhan Veli"],answer:0,exp:"Peyami Safa"},
+{q:"Garip temsilcisi?",options:["Nazım","Orhan Veli","Cahit Sıtkı","Tanpınar"],answer:1,exp:"Orhan Veli"},
+{q:"Toplumcu şair?",options:["Nazım","Tanpınar","Orhan Veli","Cahit"],answer:0,exp:"Nazım"},
+{q:"35 Yaş?",options:["Cahit Sıtkı","Orhan Veli","Nazım","Tanpınar"],answer:0,exp:"Cahit Sıtkı"},
+{q:"Semaver?",options:["Sait Faik","Sabahattin Ali","Reşat Nuri","Haldun"],answer:0,exp:"Sait Faik"},
+{q:"Kağnı?",options:["Sabahattin Ali","Sait Faik","Memduh","Yakup Kadri"],answer:0,exp:"Sabahattin Ali"},
+{q:"Keşanlı Ali?",options:["Haldun Taner","Refik","Ataç","Falih"],answer:0,exp:"Haldun Taner"}
+],
+tarih:[
+{q:"Kurtuluş Savaşı fiilen?",options:["Amasya","Sivas","Samsun","TBMM"],answer:2,exp:"19 Mayıs 1919"},
+{q:"TBMM açılışı?",options:["1918","1919","1920","1923"],answer:2,exp:"23 Nisan 1920"},
+{q:"Amasya vurgusu?",options:["Saltanat","Milli irade","Cumhuriyet","Halifelik"],answer:1,exp:"Milli irade"},
+{q:"Sivas Kongresi?",options:["Bölgesel","Ulusal","Askeri","Dini"],answer:1,exp:"Ulusal"},
+{q:"Misak-ı Milli?",options:["Bağımsızlık","Borç","Vergi","Nüfus"],answer:0,exp:"Bağımsızlık"},
+{q:"Lozan önemi?",options:["Savaş","Tanınma","Göç","Ekonomi"],answer:1,exp:"Tanınma"},
+{q:"Atatürk ilkesi?",options:["Teokrasi","Milliyetçilik","Monarşi","Sömürge"],answer:1,exp:"Milliyetçilik"},
+{q:"Islahatçı padişah?",options:["II. Mahmut","Fatih","Yavuz","I. Murat"],answer:0,exp:"II. Mahmut"},
+{q:"Kapitülasyon etkisi?",options:["Ekonomi","Hava","Coğrafya","Biyoloji"],answer:0,exp:"Ekonomi"},
+{q:"Lozan alanı?",options:["Tanınma","Spor","Nüfus","—"],answer:0,exp:"Tanınma"}
+],
+dil:[
+{q:"I am going to…",options:["Present Simple","Present Cont.","Future (going to)","Past"],answer:2,exp:"Going to = gelecek"},
+{q:"She usually…",options:["Present Simple","Past","Future","Cont."],answer:0,exp:"Usually → Present Simple"},
+{q:"They are playing",options:["Simple","Continuous","Past","Future"],answer:1,exp:"are+V-ing"},
+{q:"I went home",options:["Present","Past Simple","Future","Cont."],answer:1,exp:"went → past"},
+{q:"Can?",options:["Zorunluluk","Yetenek/izin","Geçmiş","Sahiplik"],answer:1,exp:"Yetenek/izin"},
+{q:"Should?",options:["Tavsiye","Geçmiş","Süre","Yer"],answer:0,exp:"Tavsiye"},
+{q:"There is?",options:["Çoğul","Tekil","Geçmiş","—"],answer:1,exp:"Tekil"},
+{q:"There are?",options:["Tekil","Çoğul","Soru","—"],answer:1,exp:"Çoğul"},
+{q:"Because?",options:["Ama","Ve","Çünkü","İçin"],answer:2,exp:"Çünkü"},
+{q:"But?",options:["Ama","Çünkü","Ve","İle"],answer:0,exp:"Ama"}
+]
+};
+
+let activeQuiz='biyoloji';
+const quizDiv=document.getElementById('quiz');
+const quizResult=document.getElementById('quizResult');
+
+function switchQuiz(k){activeQuiz=k; resetQuiz();}
+function renderQuiz(){
+  quizDiv.innerHTML='';
+  const title=document.createElement('div');
+  title.className='pill'; title.textContent='Test: '+activeQuiz.toUpperCase();
+  quizDiv.appendChild(title);
+  questionBank[activeQuiz].forEach((it,i)=>{
+    const box=document.createElement('div'); box.className='card';
+    const q=document.createElement('div'); q.className='name'; q.textContent=(i+1)+'. '+it.q; box.appendChild(q);
+    it.options.forEach((op,j)=>{
+      const lb=document.createElement('label');
+      lb.innerHTML=`<input type="radio" name="q${i}" value="${j}"> ${op}`;
+      lb.style.display='block'; lb.style.marginTop='6px';
+      box.appendChild(lb);
+    });
+    const ex=document.createElement('div'); ex.id='exp'+i; ex.className='mini'; ex.style.display='none'; box.appendChild(ex);
+    quizDiv.appendChild(box);
+  });
+}
+function checkQuiz(){
+  let c=0;
+  questionBank[activeQuiz].forEach((it,i)=>{
+    const radios=document.getElementsByName('q'+i);
+    let sel=-1; radios.forEach(r=>{if(r.checked) sel=+r.value;});
+    const ex=document.getElementById('exp'+i); ex.style.display='block';
+    if(sel===it.answer){c++; ex.textContent='Doğru ✔'; ex.style.color='var(--ok)';}
+    else{ex.textContent='Yanlış ✘ → '+it.exp; ex.style.color='var(--bad)';}
+  });
+  quizResult.textContent=`Sonuç: ${c} / ${questionBank[activeQuiz].length}`;
+}
+function resetQuiz(){quizResult.textContent=''; renderQuiz();}
+document.getElementById('checkQuiz').onclick=checkQuiz;
+document.getElementById('resetQuiz').onclick=resetQuiz;
+resetQuiz();
+</script>
+</body>
+</html>
